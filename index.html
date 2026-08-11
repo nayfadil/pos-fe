@@ -1,327 +1,456 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-950 text-slate-100">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS Analytics Dashboard</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & ReactDOM CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel CDN for JSX Parsing -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Font Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>React Lifecycle & Analytics Dashboard</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
             }
+          }
         }
-    </script>
+      }
+    }
+  </script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- React & ReactDOM CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel Standalone untuk JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+  </style>
 </head>
-<body class="h-full font-sans antialiased selection:bg-indigo-500 selection:text-white">
-    <div id="root" class="h-full"></div>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+  <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-        // --- ICON COMPONENTS (SVG Inline) ---
-        const IconDashboard = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-        );
-        const IconUsers = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-        );
-        const IconRevenue = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        );
-        const IconSettings = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        );
-        const IconBell = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-        );
-        const IconPlus = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
-        );
-        const IconSearch = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        );
+    // --- Sub-Component: Lifecycle Log Console ---
+    function LifecycleConsole({ logs, onClear }) {
+      const logContainerRef = useRef(null);
 
-        // --- SUB-COMPONENTS ---
-        const Sidebar = ({ activeTab, setActiveTab }) => {
-            const menuItems = [
-                { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
-                { id: 'users', label: 'Pengguna', icon: IconUsers },
-                { id: 'revenue', label: 'Pendapatan', icon: IconRevenue },
-                { id: 'settings', label: 'Pengaturan', icon: IconSettings },
-            ];
+      // Component Updating Lifecycle Demo
+      useEffect(() => {
+        if (logContainerRef.current) {
+          logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+        }
+      }, [logs]);
 
-            return (
-                <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex shrink-0">
-                    <div>
-                        <div className="h-16 flex items-center px-6 border-b border-slate-800 gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
-                                A
-                            </div>
-                            <span className="font-bold text-lg text-white tracking-wide">Apex Analytics</span>
-                        </div>
-                        <nav className="p-4 space-y-1.5">
-                            {menuItems.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = activeTab === item.id;
-                                return (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => setActiveTab(item.id)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                                            isActive
-                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
-                                        }`}
-                                    >
-                                        <Icon />
-                                        {item.label}
-                                    </button>
-                                );
-                            })}
-                        </nav>
-                    </div>
-                    <div className="p-4 border-t border-slate-800">
-                        <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-800/40">
-                            <img
-                                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-                                alt="Profile"
-                                className="w-9 h-9 rounded-full object-cover border border-slate-700"
-                            />
-                            <div className="overflow-hidden">
-                                <p className="text-sm font-medium text-slate-200 truncate">Sarah Jenkins</p>
-                                <p className="text-xs text-slate-500 truncate">Admin Lead</p>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
-            );
-        };
-
-        const Header = () => (
-            <header className="h-16 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-10">
-                <div className="relative w-72">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                        <IconSearch />
-                    </span>
-                    <input
-                        type="text"
-                        placeholder="Cari sesuatu..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
-                    />
-                </div>
-                <div className="flex items-center gap-4">
-                    <button className="relative p-2 text-slate-400 hover:text-slate-200 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:bg-slate-800 transition">
-                        <IconBell />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-500"></span>
-                    </button>
-                </div>
-            </header>
-        );
-
-        const StatCard = ({ title, value, change, isPositive }) => (
-            <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-2xl relative overflow-hidden backdrop-blur-sm">
-                <p className="text-sm font-medium text-slate-400">{title}</p>
-                <div className="mt-3 flex items-baseline justify-between">
-                    <h3 className="text-2xl font-bold text-slate-100">{value}</h3>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        isPositive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                    }`}>
-                        {change}
-                    </span>
-                </div>
+      return (
+        <div class="bg-slate-900 text-slate-200 rounded-xl p-4 shadow-lg border border-slate-800 flex flex-col h-64">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+              <h3 class="text-xs font-mono font-semibold ml-2 text-slate-400 uppercase tracking-wider">React Lifecycle Logger</h3>
             </div>
-        );
-
-        // --- MAIN APP COMPONENT ---
-        const App = () => {
-            const [activeTab, setActiveTab] = useState('dashboard');
-            const [transactions, setTransactions] = useState([
-                { id: 'TRX-101', name: 'Alex Rivera', plan: 'Enterprise Pro', amount: 'Rp 2.450.000', status: 'Sukses', date: '12 Okt 2023' },
-                { id: 'TRX-102', name: 'Siti Rahma', plan: 'Starter Pack', amount: 'Rp 350.000', status: 'Sukses', date: '12 Okt 2023' },
-                { id: 'TRX-103', name: 'Budi Santoso', plan: 'Team License', amount: 'Rp 1.200.000', status: 'Pending', date: '11 Okt 2023' },
-                { id: 'TRX-104', name: 'Jessica Tan', plan: 'Enterprise Pro', amount: 'Rp 2.450.000', status: 'Gagal', date: '10 Okt 2023' },
-            ]);
-
-            const [isModalOpen, setIsModalOpen] = useState(false);
-            const [newCustomer, setNewCustomer] = useState({ name: '', plan: 'Starter Pack', amount: '' });
-
-            const handleAddTransaction = (e) => {
-                e.preventDefault();
-                if (!newCustomer.name || !newCustomer.amount) return;
-
-                const newEntry = {
-                    id: `TRX-${Math.floor(100 + Math.random() * 900)}`,
-                    name: newCustomer.name,
-                    plan: newCustomer.plan,
-                    amount: `Rp ${Number(newCustomer.amount).toLocaleString('id-ID')}`,
-                    status: 'Sukses',
-                    date: 'Hari ini'
-                };
-
-                setTransactions([newEntry, ...transactions]);
-                setNewCustomer({ name: '', plan: 'Starter Pack', amount: '' });
-                setIsModalOpen(false);
-            };
-
-            return (
-                <div className="flex h-screen bg-slate-950 overflow-hidden">
-                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-
-                    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-                        <Header />
-
-                        <main className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-8">
-                            {/* Title Action Bar */}
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div>
-                                    <h1 className="text-2xl font-bold text-white capitalize">{activeTab}</h1>
-                                    <p className="text-sm text-slate-400 mt-1">Ringkasan performa & aktivitas sistem Anda saat ini.</p>
-                                </div>
-                                <button 
-                                    onClick={() => setIsModalOpen(true)}
-                                    className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2.5 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/25 active:scale-95"
-                                >
-                                    <IconPlus />
-                                    <span>Transaksi Baru</span>
-                                </button>
-                            </div>
-
-                            {/* Stat Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <StatCard title="Total Pendapatan" value="Rp 128.400.000" change="+12.5%" isPositive={true} />
-                                <StatCard title="Pengguna Aktif" value="3,420" change="+8.1%" isPositive={true} />
-                                <StatCard title="Konversi Sales" value="4.2%" change="-1.4%" isPositive={false} />
-                                <StatCard title="Langganan Batal" value="12" change="-0.5%" isPositive={true} />
-                            </div>
-
-                            {/* Data Table */}
-                            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm">
-                                <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-                                    <h2 className="text-lg font-semibold text-white">Transaksi Terakhir</h2>
-                                    <span className="text-xs text-slate-400">Total: {transactions.length} Data</span>
-                                </div>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm text-slate-300">
-                                        <thead className="bg-slate-900/80 text-xs text-slate-400 uppercase border-b border-slate-800">
-                                            <tr>
-                                                <th className="px-6 py-4">ID</th>
-                                                <th className="px-6 py-4">Pelanggan</th>
-                                                <th className="px-6 py-4">Paket</th>
-                                                <th className="px-6 py-4">Jumlah</th>
-                                                <th className="px-6 py-4">Status</th>
-                                                <th className="px-6 py-4">Tanggal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-800/60">
-                                            {transactions.map((item) => (
-                                                <tr key={item.id} className="hover:bg-slate-800/30 transition">
-                                                    <td className="px-6 py-4 font-mono text-xs text-indigo-400">{item.id}</td>
-                                                    <td className="px-6 py-4 font-medium text-slate-200">{item.name}</td>
-                                                    <td className="px-6 py-4 text-slate-400">{item.plan}</td>
-                                                    <td className="px-6 py-4 font-semibold text-slate-200">{item.amount}</td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                            item.status === 'Sukses' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                                            item.status === 'Pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                                                            'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                                        }`}>
-                                                            {item.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-slate-400 text-xs">{item.date}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </main>
-                    </div>
-
-                    {/* MODAL FORM */}
-                    {isModalOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-6">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-xl font-bold text-white">Tambah Transaksi Baru</h3>
-                                    <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
-                                </div>
-                                <form onSubmit={handleAddTransaction} className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Nama Pelanggan</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={newCustomer.name}
-                                            onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
-                                            placeholder="Masukkan nama"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Paket</label>
-                                        <select
-                                            value={newCustomer.plan}
-                                            onChange={(e) => setNewCustomer({...newCustomer, plan: e.target.value})}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
-                                        >
-                                            <option>Starter Pack</option>
-                                            <option>Team License</option>
-                                            <option>Enterprise Pro</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Jumlah (Rp)</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            value={newCustomer.amount}
-                                            onChange={(e) => setNewCustomer({...newCustomer, amount: e.target.value})}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
-                                            placeholder="350000"
-                                        />
-                                    </div>
-                                    <div className="flex justify-end gap-3 pt-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsModalOpen(false)}
-                                            className="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800"
-                                        >
-                                            Batal
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500"
-                                        >
-                                            Simpan
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
+            <button 
+              onClick={onClear}
+              class="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded transition">
+              Clear Console
+            </button>
+          </div>
+          <div ref={logContainerRef} class="font-mono text-xs overflow-y-auto space-y-1.5 custom-scrollbar flex-1 pr-2">
+            {logs.length === 0 ? (
+              <span class="text-slate-600 italic">Menunggu event lifecycle...</span>
+            ) : (
+              logs.map((log) => (
+                <div key={log.id} class="flex items-start space-x-2 animate-fadeIn">
+                  <span class="text-slate-500 shrink-0">[{log.timestamp}]</span>
+                  <span class={`font-semibold shrink-0 ${log.typeColor}`}>{log.type}</span>
+                  <span class="text-slate-300 break-all">{log.message}</span>
                 </div>
-            );
-        };
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
 
-        // Render React Application
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+    // --- Sub-Component: Live Clock Widget (Mounting/Unmounting Lifecycle Demo) ---
+    function LiveClockWidget({ addLog }) {
+      const [time, setTime] = useState(new Date().toLocaleTimeString());
+      const [ticks, setTicks] = useState(0);
+
+      useEffect(() => {
+        // Lifecycle: MOUNTING
+        addLog('MOUNT', 'LiveClockWidget berhasil di-mount ke DOM', 'text-emerald-400');
+        
+        const timerId = setInterval(() => {
+          setTime(new Date().toLocaleTimeString());
+          setTicks((prev) => prev + 1);
+        }, 1000);
+
+        // Lifecycle: UNMOUNTING (Cleanup)
+        return () => {
+          clearInterval(timerId);
+          addLog('UNMOUNT', 'LiveClockWidget dibersihkan (Interval cleared)', 'text-rose-400');
+        };
+      }, []);
+
+      return (
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Realtime Timer Widget</p>
+            <h4 class="text-2xl font-bold mt-1 font-mono text-brand-600 dark:text-brand-500">{time}</h4>
+            <p class="text-xs text-slate-400 mt-1">Tick Count: <span class="font-bold text-slate-600 dark:text-slate-300">{ticks}</span></p>
+          </div>
+          <div class="w-12 h-12 rounded-full bg-brand-50 dark:bg-slate-700 flex items-center justify-center text-brand-600 dark:text-brand-500 text-xl">
+            <i class="fa-regular fa-clock animate-pulse"></i>
+          </div>
+        </div>
+      );
+    }
+
+    // --- Sub-Component: User Modal (Child Mount/Unmount Demo) ---
+    function UserModal({ isOpen, onClose, onAddUser, addLog }) {
+      const [name, setName] = useState('');
+      const [role, setRole] = useState('Developer');
+
+      useEffect(() => {
+        if (isOpen) {
+          addLog('MOUNT', 'Modal Component dibuka', 'text-cyan-400');
+        }
+        return () => {
+          if (isOpen) {
+            addLog('UNMOUNT', 'Modal Component ditutup & dibersihkan', 'text-amber-400');
+          }
+        };
+      }, [isOpen]);
+
+      if (!isOpen) return null;
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+        onAddUser({ name, role, status: 'Active' });
+        setName('');
+        onClose();
+      };
+
+      return (
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700 overflow-hidden animate-scaleUp">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+              <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Tambah Pengguna Baru</h3>
+              <button onClick={onClose} class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <i class="fa-solid fa-xmark text-lg"></i>
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} class="p-6 space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label>
+                <input 
+                  type="text" 
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Masukkan nama"
+                  class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peran / Jabatan</label>
+                <select 
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="Developer">Developer</option>
+                  <option value="Designer">Designer</option>
+                  <option value="Product Manager">Product Manager</option>
+                  <option value="QA Engineer">QA Engineer</option>
+                </select>
+              </div>
+              <div class="flex justify-end space-x-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={onClose}
+                  class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">
+                  Batal
+                </button>
+                <button 
+                  type="submit"
+                  class="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow transition">
+                  Simpan Data
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // --- Main Application Component --- 
+    function App() {
+      const [darkMode, setDarkMode] = useState(false);
+      const [showWidget, setShowWidget] = useState(true);
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [logs, setLogs] = useState([]);
+      
+      const [users, setUsers] = useState([
+        { id: 1, name: 'Budi Santoso', role: 'Developer', status: 'Active' },
+        { id: 2, name: 'Siti Rahma', role: 'Designer', status: 'Active' },
+        { id: 3, name: 'Ahmad Dahlan', role: 'Product Manager', status: 'Inactive' },
+      ]);
+
+      // Helper Function untuk Logging Lifecycle
+      const addLog = useCallback((type, message, typeColor = 'text-blue-400') => {
+        const now = new Date();
+        const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+        setLogs((prevLogs) => [
+          ...prevLogs,
+          { id: Date.now() + Math.random(), timestamp, type, message, typeColor }
+        ]);
+      }, []);
+
+      // 1. Initial Mount Lifecycle
+      useEffect(() => {
+        addLog('MOUNT', 'App Root berhasil di-render (Initial Component Mount)', 'text-emerald-400');
+      }, [addLog]);
+
+      // 2. Theme Lifecycle Update
+      useEffect(() => {
+        if (darkMode) {
+          document.documentElement.classList.add('dark');
+          addLog('UPDATE', 'Tema diubah menjadi Dark Mode', 'text-purple-400');
+        } else {
+          document.documentElement.classList.remove('dark');
+          addLog('UPDATE', 'Tema diubah menjadi Light Mode', 'text-purple-400');
+        }
+      }, [darkMode, addLog]);
+
+      // 3. User State Change Lifecycle
+      useEffect(() => {
+        addLog('UPDATE', `Daftar Pengguna diperbarui (Total: ${users.length} pengguna)`, 'text-amber-400');
+      }, [users, addLog]);
+
+      // Derived State dengan useMemo
+      const filteredUsers = useMemo(() => {
+        return users.filter(u => 
+          u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.role.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }, [users, searchQuery]);
+
+      const handleAddUser = (newUser) => {
+        setUsers((prev) => [...prev, { ...newUser, id: Date.now() }]);
+      };
+
+      const handleDeleteUser = (id) => {
+        setUsers((prev) => prev.filter(u => u.id !== id));
+      };
+
+      return (
+        <div class="min-h-screen flex flex-col">
+          {/* Top Header Navbar */}
+          <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="bg-brand-600 text-white p-2 rounded-lg">
+                  <i class="fa-solid fa-cubes text-xl"></i>
+                </div>
+                <div>
+                  <h1 class="font-bold text-lg leading-tight text-slate-800 dark:text-slate-100">React Architecture</h1>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Lifecycle Hooks & Interactive Dashboard</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-3">
+                {/* Toggle Dark Mode Button */}
+                <button 
+                  onClick={() => setDarkMode(!darkMode)}
+                  class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition">
+                  <i class={`fa-solid ${darkMode ? 'fa-sun text-amber-400' : 'fa-moon'}`}></i>
+                </button>
+                
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow flex items-center space-x-2 transition">
+                  <i class="fa-solid fa-plus"></i>
+                  <span>Tambah User</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Content Area */}
+          <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            
+            {/* Top Row Grid */}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Widget Toggle Card */}
+              <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+                <div>
+                  <span class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">Control Panel</span>
+                  <h3 class="text-lg font-bold mt-1">Lifecycle Unmount Test</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Gunakan tombol di bawah untuk menyalakan/mematikan widget clock & memicu cleanup lifecycle.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowWidget(!showWidget)}
+                  class={`mt-4 w-full py-2 px-4 rounded-lg text-sm font-semibold transition border ${showWidget ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/30 dark:border-rose-900' : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900'}`}>
+                  {showWidget ? 'Unmount Widget Clock' : 'Mount Widget Clock'}
+                </button>
+              </div>
+
+              {/* Dynamic Live Widget */}
+              {showWidget ? (
+                <LiveClockWidget addLog={addLog} />
+              ) : (
+                <div class="bg-slate-100 dark:bg-slate-800/50 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+                  <i class="fa-solid fa-plug-circle-xmark text-3xl text-slate-400 mb-2"></i>
+                  <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Widget Unmounted</p>
+                  <p class="text-xs text-slate-400">Komponen telah dihapus dari DOM tree.</p>
+                </div>
+              )}
+
+              {/* Summary Stats */}
+              <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Tim Aktif</p>
+                  <h4 class="text-3xl font-bold mt-1 text-slate-800 dark:text-slate-100">{users.length} <span class="text-sm font-normal text-slate-400">Anggota</span></h4>
+                  <p class="text-xs text-emerald-500 mt-1 flex items-center">
+                    <i class="fa-solid fa-arrow-trend-up mr-1"></i> Updated via React State
+                  </p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-slate-700 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xl">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+              </div>
+            </div>
+
+            {/* Real-time Console Log Area */}
+            <LifecycleConsole logs={logs} onClear={() => setLogs([])} />
+
+            {/* Interactive Table Section */}
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">Daftar Anggota Tim</h2>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Manajemen data dengan re-render state teroptimasi.</p>
+                </div>
+                <div class="relative w-full sm:w-64">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                  <input 
+                    type="text"
+                    placeholder="Cari nama/peran..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    class="w-full pl-9 pr-4 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-xs uppercase font-semibold">
+                      <th class="py-3.5 px-6">Pengguna</th>
+                      <th class="py-3.5 px-6">Peran</th>
+                      <th class="py-3.5 px-6">Status</th>
+                      <th class="py-3.5 px-6 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                    {filteredUsers.length > 0 ? (
+                      filteredUsers.map((user) => (
+                        <tr key={user.id} class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition">
+                          <td class="py-4 px-6 font-medium text-slate-800 dark:text-slate-100 flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 dark:bg-slate-700 dark:text-brand-400 flex items-center justify-center font-bold text-xs uppercase">
+                              {user.name.charAt(0)}
+                            </div>
+                            <span>{user.name}</span>
+                          </td>
+                          <td class="py-4 px-6 text-slate-600 dark:text-slate-300">{user.role}</td>
+                          <td class="py-4 px-6">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                              {user.status}
+                            </span>
+                          </td>
+                          <td class="py-4 px-6 text-right">
+                            <button 
+                              onClick={() => handleDeleteUser(user.id)}
+                              class="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 transition">
+                              <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" class="py-8 text-center text-slate-400">
+                          Tidak ada data pengguna ditemukan.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </main>
+
+          {/* User Modal Component */}
+          <UserModal 
+            isOpen={isModalOpen} 
+            onClose={() => setIsModalOpen(false)} 
+            onAddUser={handleAddUser}
+            addLog={addLog}
+          />
+        </div>
+      );
+    }
+
+    // Render React Application to Root
+    const rootElement = document.getElementById('root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+  </script>
 </body>
 </html>
