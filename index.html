@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Analytics Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel CDN for JSX Parsing -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full font-sans antialiased selection:bg-indigo-500 selection:text-white">
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ICON COMPONENTS (SVG Inline) ---
+        const IconDashboard = () => (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        );
+        const IconUsers = () => (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        );
+        const IconRevenue = () => (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        );
+        const IconSettings = () => (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        );
+        const IconBell = () => (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        );
+        const IconPlus = () => (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+        );
+        const IconSearch = () => (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        );
+
+        // --- SUB-COMPONENTS ---
+        const Sidebar = ({ activeTab, setActiveTab }) => {
+            const menuItems = [
+                { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
+                { id: 'users', label: 'Pengguna', icon: IconUsers },
+                { id: 'revenue', label: 'Pendapatan', icon: IconRevenue },
+                { id: 'settings', label: 'Pengaturan', icon: IconSettings },
+            ];
+
+            return (
+                <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex shrink-0">
+                    <div>
+                        <div className="h-16 flex items-center px-6 border-b border-slate-800 gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
+                                A
+                            </div>
+                            <span className="font-bold text-lg text-white tracking-wide">Apex Analytics</span>
+                        </div>
+                        <nav className="p-4 space-y-1.5">
+                            {menuItems.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = activeTab === item.id;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setActiveTab(item.id)}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                                            isActive
+                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                                        }`}
+                                    >
+                                        <Icon />
+                                        {item.label}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    </div>
+                    <div className="p-4 border-t border-slate-800">
+                        <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-800/40">
+                            <img
+                                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+                                alt="Profile"
+                                className="w-9 h-9 rounded-full object-cover border border-slate-700"
+                            />
+                            <div className="overflow-hidden">
+                                <p className="text-sm font-medium text-slate-200 truncate">Sarah Jenkins</p>
+                                <p className="text-xs text-slate-500 truncate">Admin Lead</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            );
+        };
+
+        const Header = () => (
+            <header className="h-16 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-10">
+                <div className="relative w-72">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                        <IconSearch />
+                    </span>
+                    <input
+                        type="text"
+                        placeholder="Cari sesuatu..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                    />
+                </div>
+                <div className="flex items-center gap-4">
+                    <button className="relative p-2 text-slate-400 hover:text-slate-200 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:bg-slate-800 transition">
+                        <IconBell />
+                        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-500"></span>
+                    </button>
+                </div>
+            </header>
+        );
+
+        const StatCard = ({ title, value, change, isPositive }) => (
+            <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-2xl relative overflow-hidden backdrop-blur-sm">
+                <p className="text-sm font-medium text-slate-400">{title}</p>
+                <div className="mt-3 flex items-baseline justify-between">
+                    <h3 className="text-2xl font-bold text-slate-100">{value}</h3>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        isPositive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    }`}>
+                        {change}
+                    </span>
+                </div>
+            </div>
+        );
+
+        // --- MAIN APP COMPONENT ---
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [transactions, setTransactions] = useState([
+                { id: 'TRX-101', name: 'Alex Rivera', plan: 'Enterprise Pro', amount: 'Rp 2.450.000', status: 'Sukses', date: '12 Okt 2023' },
+                { id: 'TRX-102', name: 'Siti Rahma', plan: 'Starter Pack', amount: 'Rp 350.000', status: 'Sukses', date: '12 Okt 2023' },
+                { id: 'TRX-103', name: 'Budi Santoso', plan: 'Team License', amount: 'Rp 1.200.000', status: 'Pending', date: '11 Okt 2023' },
+                { id: 'TRX-104', name: 'Jessica Tan', plan: 'Enterprise Pro', amount: 'Rp 2.450.000', status: 'Gagal', date: '10 Okt 2023' },
+            ]);
+
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [newCustomer, setNewCustomer] = useState({ name: '', plan: 'Starter Pack', amount: '' });
+
+            const handleAddTransaction = (e) => {
+                e.preventDefault();
+                if (!newCustomer.name || !newCustomer.amount) return;
+
+                const newEntry = {
+                    id: `TRX-${Math.floor(100 + Math.random() * 900)}`,
+                    name: newCustomer.name,
+                    plan: newCustomer.plan,
+                    amount: `Rp ${Number(newCustomer.amount).toLocaleString('id-ID')}`,
+                    status: 'Sukses',
+                    date: 'Hari ini'
+                };
+
+                setTransactions([newEntry, ...transactions]);
+                setNewCustomer({ name: '', plan: 'Starter Pack', amount: '' });
+                setIsModalOpen(false);
+            };
+
+            return (
+                <div className="flex h-screen bg-slate-950 overflow-hidden">
+                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+
+                    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+                        <Header />
+
+                        <main className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-8">
+                            {/* Title Action Bar */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div>
+                                    <h1 className="text-2xl font-bold text-white capitalize">{activeTab}</h1>
+                                    <p className="text-sm text-slate-400 mt-1">Ringkasan performa & aktivitas sistem Anda saat ini.</p>
+                                </div>
+                                <button 
+                                    onClick={() => setIsModalOpen(true)}
+                                    className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2.5 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/25 active:scale-95"
+                                >
+                                    <IconPlus />
+                                    <span>Transaksi Baru</span>
+                                </button>
+                            </div>
+
+                            {/* Stat Cards */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <StatCard title="Total Pendapatan" value="Rp 128.400.000" change="+12.5%" isPositive={true} />
+                                <StatCard title="Pengguna Aktif" value="3,420" change="+8.1%" isPositive={true} />
+                                <StatCard title="Konversi Sales" value="4.2%" change="-1.4%" isPositive={false} />
+                                <StatCard title="Langganan Batal" value="12" change="-0.5%" isPositive={true} />
+                            </div>
+
+                            {/* Data Table */}
+                            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm">
+                                <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+                                    <h2 className="text-lg font-semibold text-white">Transaksi Terakhir</h2>
+                                    <span className="text-xs text-slate-400">Total: {transactions.length} Data</span>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-slate-300">
+                                        <thead className="bg-slate-900/80 text-xs text-slate-400 uppercase border-b border-slate-800">
+                                            <tr>
+                                                <th className="px-6 py-4">ID</th>
+                                                <th className="px-6 py-4">Pelanggan</th>
+                                                <th className="px-6 py-4">Paket</th>
+                                                <th className="px-6 py-4">Jumlah</th>
+                                                <th className="px-6 py-4">Status</th>
+                                                <th className="px-6 py-4">Tanggal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-800/60">
+                                            {transactions.map((item) => (
+                                                <tr key={item.id} className="hover:bg-slate-800/30 transition">
+                                                    <td className="px-6 py-4 font-mono text-xs text-indigo-400">{item.id}</td>
+                                                    <td className="px-6 py-4 font-medium text-slate-200">{item.name}</td>
+                                                    <td className="px-6 py-4 text-slate-400">{item.plan}</td>
+                                                    <td className="px-6 py-4 font-semibold text-slate-200">{item.amount}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                            item.status === 'Sukses' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                                            item.status === 'Pending' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                                                            'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                                        }`}>
+                                                            {item.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-slate-400 text-xs">{item.date}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+
+                    {/* MODAL FORM */}
+                    {isModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+                            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-xl font-bold text-white">Tambah Transaksi Baru</h3>
+                                    <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+                                </div>
+                                <form onSubmit={handleAddTransaction} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Nama Pelanggan</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={newCustomer.name}
+                                            onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                                            placeholder="Masukkan nama"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Paket</label>
+                                        <select
+                                            value={newCustomer.plan}
+                                            onChange={(e) => setNewCustomer({...newCustomer, plan: e.target.value})}
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                                        >
+                                            <option>Starter Pack</option>
+                                            <option>Team License</option>
+                                            <option>Enterprise Pro</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-1">Jumlah (Rp)</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            value={newCustomer.amount}
+                                            onChange={(e) => setNewCustomer({...newCustomer, amount: e.target.value})}
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                                            placeholder="350000"
+                                        />
+                                    </div>
+                                    <div className="flex justify-end gap-3 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsModalOpen(false)}
+                                            className="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800"
+                                        >
+                                            Batal
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500"
+                                        >
+                                            Simpan
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Render React Application
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
