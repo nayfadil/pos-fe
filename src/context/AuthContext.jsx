@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -10,18 +10,18 @@ export const AuthProvider = ({ children }) => {
 
   const login = (email, password) => {
     if (email && password) {
-      const userData = {
-        id: '1',
-        name: 'Alex Johnson',
+      const mockUser = {
+        id: 'usr-101',
+        name: 'Alex Developer',
         email: email,
-        role: 'Administrator',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'
+        role: 'Senior Architect',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
       };
-      setUser(userData);
-      localStorage.setItem('app_user', JSON.stringify(userData));
+      setUser(mockUser);
+      localStorage.setItem('app_user', JSON.stringify(mockUser));
       return { success: true };
     }
-    return { success: false, error: 'Email dan password wajib diisi.' };
+    return { success: false, message: 'Email dan password harus diisi' };
   };
 
   const logout = () => {
@@ -30,16 +30,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
