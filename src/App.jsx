@@ -1,40 +1,73 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
-import Header from './components/Header';
+import { useCart } from './hooks/useCart';
+import { useProducts } from './hooks/useProducts';
+import { Header } from './components/Header';
 import { PosPage } from './pages/PosPage';
-import { LoginPage } from './pages/LoginPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { LoginPage } from './pages/LoginPage';
 
-function AppContent() {
-  const auth = useAuth() || {};
-  const { user, activeTab, currentPage } = auth;
-  const currentView = activeTab || currentPage;
+function MainContent() {
+  const { isAuthenticated, isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState('pos');
+  const { addToCart } = useCart();
+  const {
+    products,
+    allProducts,
+    categories,
+    searchTerm,
+    setSearchTerm,
+    selectedCategory,
+    setSelectedCategory,
+    addProduct,
+    updateProduct,
+    deleteProduct
+  } = useProducts();
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <LoginPage />;
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
-      <Header />
-      <main className="flex-1 flex overflow-hidden">
-        {currentView === 'admin' || currentView === 'dashboard' ? (
-          <AdminDashboardPage />
+    <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        {activeTab === 'pos' ? (
+          <PosPage
+            products={products}
+            onAddToCart={addToCart}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            categories={categories}
+          />
+        ) : isAdmin ? (
+          <AdminDashboardPage
+            allProducts={allProducts}
+            onAddProduct={addProduct}
+            onUpdateProduct={updateProduct}
+            onDeleteProduct={deleteProduct}
+          />
         ) : (
-          <PosPage />
+          <div className="bg-white p-8 rounded-xl border text-center text-gray-500">
+            Anda tidak memiliki akses ke halaman Admin.
+          </div>
         )}
       </main>
     </div>
   );
 }
 
-export default function App() {
+export function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <AppContent />
+        <MainContent />
       </CartProvider>
     </AuthProvider>
   );
 }
+
+export default App;

@@ -1,71 +1,65 @@
-import { Search } from "lucide-react";
-import { ProductCard } from "./ProductCard";
+import React from 'react';
+import { ProductCard } from './ProductCard';
+import { Search, Filter } from 'lucide-react';
 
 export function ProductGrid({
   products,
-  loading,
+  onAddToCart,
   searchTerm,
   setSearchTerm,
   selectedCategory,
   setSelectedCategory,
-  categories,
-  onAddToCart,
+  categories
 }) {
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "Semua" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+    <div className="flex-1 flex flex-col h-full overflow-hidden gap-4">
+      <div className="bg-white p-4 rounded-xl border border-gray-200 flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full sm:w-72">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Cari produk..."
+            placeholder="Cari produk atau kode..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
-          {categories.map((cat) => (
+
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+          <Filter className="w-4 h-4 text-gray-400 mr-1 hidden sm:block" />
+          {categories.map((category) => (
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                selectedCategory === cat
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                selectedCategory === category
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {cat}
+              {category}
             </button>
           ))}
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64 bg-white rounded-xl border border-gray-100">
-          <p className="text-gray-500 text-sm">Memuat produk...</p>
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border border-gray-100 text-center p-6">
-          <p className="text-gray-500 text-base font-medium">Produk tidak ditemukan</p>
-          <p className="text-gray-400 text-sm mt-1">Coba kata kunci atau kategori lain.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
-          ))}
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto">
+        {products.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center my-auto">
+            <p className="text-gray-500 text-sm">Tidak ada produk yang ditemukan.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-6">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={onAddToCart}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

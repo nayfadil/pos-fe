@@ -1,15 +1,18 @@
 import React from 'react';
-import ProductForm from '../components/admin/ProductForm';
+import { Header } from '../components/Header';
+import { ProductForm } from '../components/admin/ProductForm';
 
-export function AdminDashboardPage() {
+export function AdminDashboardPage({ onNavigate }) {
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-gray-100">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard Admin</h1>
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <ProductForm />
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <Header currentPage="admin" onNavigate={onNavigate} />
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
+          <p className="text-gray-600">Kelola produk dan inventaris toko Anda.</p>
         </div>
-      </div>
+        <ProductForm />
+      </main>
     </div>
   );
 }

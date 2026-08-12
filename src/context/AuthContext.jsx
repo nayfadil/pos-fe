@@ -1,59 +1,40 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext();
-
-const DUMMY_USERS = [
-  { username: 'kasir', password: '123', name: 'Budi Santoso', role: 'Kasir Utama' },
-  { username: 'admin', password: '123', name: 'Siti Rahma', role: 'Administrator' }
-];
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('pos_user');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('pos_user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-      } catch (err) {
-        localStorage.removeItem('pos_user');
-      }
+    if (user) {
+      localStorage.setItem('pos_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('pos_user');
     }
-    setIsLoading(false);
-  }, []);
+  }, [user]);
 
   const login = (username, password) => {
-    const foundUser = DUMMY_USERS.find(
-      (u) => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password
-    );
-
-    if (foundUser) {
-      const userData = {
-        username: foundUser.username,
-        name: foundUser.name,
-        role: foundUser.role
-      };
+    if (username === 'admin' && password === 'admin123') {
+      const userData = { id: 1, name: 'Admin Manager', username: 'admin', role: 'admin' };
       setUser(userData);
-      setIsAuthenticated(true);
-      localStorage.setItem('pos_user', JSON.stringify(userData));
       return { success: true };
-    } else {
-      return { success: false, message: 'Username atau password salah!' };
+    } else if (username === 'kasir' && password === 'kasir123') {
+      const userData = { id: 2, name: 'Kasir Utama', username: 'kasir', role: 'cashier' };
+      setUser(userData);
+      return { success: true };
     }
+    return { success: false, message: 'Username atau password salah' };
   };
 
   const logout = () => {
     setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('pos_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, isAdmin: user?.role === 'admin' }}>
       {children}
     </AuthContext.Provider>
   );
@@ -62,7 +43,7 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth harus digunakan di dalam AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
