@@ -1,27 +1,26 @@
 import { useState, useEffect } from 'react';
-import { INITIAL_PRODUCTS } from '../constants/mockData';
+import { INITIAL_PRODUCTS, CATEGORIES } from '../constants/mockData';
 
 export function useProducts() {
   const [products, setProducts] = useState(() => {
     const saved = localStorage.getItem('pos_products');
     return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
   });
-
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     localStorage.setItem('pos_products', JSON.stringify(products));
   }, [products]);
 
   const addProduct = (newProduct) => {
-    const productToAdd = {
+    const item = {
       ...newProduct,
-      id: Date.now().toString(),
+      id: `prod-${Date.now()}`,
       price: Number(newProduct.price),
       stock: Number(newProduct.stock)
     };
-    setProducts((prev) => [productToAdd, ...prev]);
+    setProducts((prev) => [item, ...prev]);
   };
 
   const updateProduct = (id, updatedData) => {
@@ -43,35 +42,25 @@ export function useProducts() {
     setProducts((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const updateStock = (productId, quantitySold) => {
-    setProducts((prev) =>
-      prev.map((item) =>
-        item.id === productId
-          ? { ...item, stock: Math.max(0, item.stock - quantitySold) }
-          : item
-      )
-    );
-  };
-
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      selectedCategory === 'Semua' || product.category === selectedCategory;
+  const filteredProducts = products.filter((p) => {
     const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.code.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === 'Semua' || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
   });
 
   return {
-    products,
-    filteredProducts,
+    products: filteredProducts,
+    allProducts: products,
+    categories: CATEGORIES,
+    searchTerm,
+    setSearchTerm,
     selectedCategory,
     setSelectedCategory,
-    searchQuery,
-    setSearchQuery,
     addProduct,
     updateProduct,
-    deleteProduct,
-    updateStock
+    deleteProduct
   };
 }
