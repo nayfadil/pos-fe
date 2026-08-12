@@ -1,47 +1,47 @@
-import React from 'react';
-import { ProductCard } from './ProductCard';
-import { useCart } from '../../hooks/useCart';
+import { Search } from "lucide-react";
+import { ProductCard } from "./ProductCard";
 
-export const ProductGrid = ({
+export function ProductGrid({
   products,
-  categories,
+  loading,
+  searchTerm,
+  setSearchTerm,
   selectedCategory,
-  onSelectCategory,
-  searchQuery,
-  onSearchChange
-}) => {
-  const { addItem } = useCart();
+  setSelectedCategory,
+  categories,
+  onAddToCart,
+}) {
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "Semua" || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
-    <div className="flex flex-col h-full space-y-4">
-      {/* Controls: Search and Filter Header */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="Cari menu atau produk..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            placeholder="Cari produk..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           />
-          <svg
-            className="w-4 h-4 absolute left-3 top-2.5 text-slate-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
         </div>
-        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+        <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => onSelectCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedCategory === cat
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               {cat}
@@ -50,24 +50,22 @@ export const ProductGrid = ({
         </div>
       </div>
 
-      {/* Grid Content */}
-      <div className="flex-1 overflow-y-auto pr-1">
-        {products.length === 0 ? (
-          <div className="h-64 flex flex-col items-center justify-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
-            <p className="text-sm font-medium">Produk tidak ditemukan</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-4">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={addItem}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center h-64 bg-white rounded-xl border border-gray-100">
+          <p className="text-gray-500 text-sm">Memuat produk...</p>
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border border-gray-100 text-center p-6">
+          <p className="text-gray-500 text-base font-medium">Produk tidak ditemukan</p>
+          <p className="text-gray-400 text-sm mt-1">Coba kata kunci atau kategori lain.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+          ))}
+        </div>
+      )}
     </div>
   );
-};
+}
