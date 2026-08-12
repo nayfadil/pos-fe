@@ -1,39 +1,63 @@
-import { Plus } from "lucide-react";
-import { Button } from "../common/Button";
-import { Card } from "../common/Card";
+import React from 'react';
+import { Plus, Package } from 'lucide-react';
+import { Card } from '../common/Card';
 
 export function ProductCard({ product, onAddToCart }) {
-  const formatRupiah = (number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      maximumFractionDigits: 0,
-    }).format(number);
-  };
+  const isOutOfStock = product.stock <= 0;
 
   return (
-    <Card className="flex flex-col justify-between overflow-hidden hover:shadow-md transition-shadow">
-      <div className="p-4 space-y-2">
-        <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-2">
-          {product.image ? (
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-gray-400 text-xs font-semibold">{product.category || "Produk"}</span>
-          )}
-        </div>
-        <h3 className="font-semibold text-gray-800 text-sm line-clamp-2 leading-snug">{product.name}</h3>
-        <p className="text-xs text-gray-500">Stok: {product.stock}</p>
-        <p className="font-bold text-blue-600 text-sm">{formatRupiah(product.price)}</p>
+    <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
+      <div className="relative h-40 bg-gray-100 overflow-hidden">
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <Package className="w-12 h-12" />
+          </div>
+        )}
+        <span className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+          {product.category}
+        </span>
       </div>
-      <div className="p-4 pt-0">
-        <Button
-          onClick={() => onAddToCart(product)}
-          disabled={product.stock <= 0}
-          className="w-full flex items-center justify-center gap-1 text-xs py-2"
-        >
-          <Plus className="w-4 h-4" />
-          {product.stock > 0 ? "Tambah" : "Habis"}
-        </Button>
+
+      <div className="p-4 flex flex-col flex-1 justify-between">
+        <div>
+          <div className="flex justify-between items-start mb-1">
+            <h3 className="font-bold text-gray-800 text-sm line-clamp-1">{product.name}</h3>
+          </div>
+          <p className="text-xs text-gray-400 mb-2">Kode: {product.code}</p>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mt-2">
+            <div>
+              <p className="text-xs text-gray-500">Harga</p>
+              <p className="font-bold text-indigo-600 text-sm">
+                Rp {product.price.toLocaleString('id-ID')}
+              </p>
+            </div>
+            <p className={`text-xs ${isOutOfStock ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+              Stok: {product.stock}
+            </p>
+          </div>
+
+          <button
+            disabled={isOutOfStock}
+            onClick={() => onAddToCart(product)}
+            className={`w-full mt-3 flex items-center justify-center space-x-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors ${
+              isOutOfStock
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+            }`}
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isOutOfStock ? 'Stok Habis' : 'Tambah'}</span>
+          </button>
+        </div>
       </div>
     </Card>
   );
