@@ -14,43 +14,57 @@ export function useProducts() {
     } catch (e) {
       console.error('Failed to parse products from localStorage:', e);
     }
-    return Array.isArray(INITIAL_PRODUCTS) ? INITIAL_PRODUCTS : [];
+    return INITIAL_PRODUCTS;
   });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Semua');
 
   useEffect(() => {
     try {
       localStorage.setItem('pos_products', JSON.stringify(products));
     } catch (e) {
-      console.error('Failed to save products to localStorage:', e);
+      console.error('Failed to save products:', e);
     }
   }, [products]);
 
+  const safeProducts = Array.isArray(products) ? products : INITIAL_PRODUCTS;
+
   const addProduct = (newProduct) => {
-    const productToAdd = {
+    const productWithId = {
       ...newProduct,
       id: Date.now(),
       price: Number(newProduct.price) || 0,
       stock: Number(newProduct.stock) || 0,
     };
-    setProducts((prev) => [...(Array.isArray(prev) ? prev : []), productToAdd]);
+    setProducts((prev) => Array.isArray(prev) ? [productWithId, ...prev] : [productWithId]);
   };
 
-  const updateProduct = (id, updatedFields) => {
-    setProducts((prev) => {
-      const safePrev = Array.isArray(prev) ? prev : [];
-      return safePrev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
-    });
+  const updateProduct = (id, updatedData) => {
+    setProducts((prev) =>
+      (Array.isArray(prev) ? prev : []).map((p) =>
+        p.id === id ? { ...p, ...updatedData, price: Number(updatedData.price), stock: Number(updatedData.stock) } : p
+      )
+    );
   };
 
   const deleteProduct = (id) => {
-    setProducts((prev) => {
-      const safePrev = Array.isArray(prev) ? prev : [];
-      return safePrev.filter((p) => p.id !== id);
-    });
+    setProducts((prev) => (Array.isArray(prev) ? prev : []).filter((p) => p.id !== id));
   };
 
+  const filteredProducts = safeProducts.filter((product) => {
+    const matchesSearch = product.name?.toLowerCase().includes((searchQuery || '').toLowerCase());
+    const matchesCategory = selectedCategory === 'Semua' || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   return {
-    products: Array.isArray(products) ? products : [],
+    products: safeProducts,
+    filteredProducts: Array.isArray(filteredProducts) ? filteredProducts : [],
+    searchQuery,
+    setSearchQuery,
+    selectedCategory,
+    setSelectedCategory,
     addProduct,
     updateProduct,
     deleteProduct,
