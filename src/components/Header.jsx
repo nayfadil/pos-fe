@@ -1,62 +1,74 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, LogOut, LayoutDashboard, Store } from 'lucide-react';
+import { Store, LayoutDashboard, LogOut, User } from 'lucide-react';
 
-export function Header({ currentPage, onNavigate }) {
+export function Header({ currentView, setCurrentView }) {
   const { user, logout } = useAuth();
 
+  if (!user) return null;
+
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onNavigate && onNavigate('pos')}>
-            <div className="p-2 bg-indigo-600 rounded-lg text-white">
-              <ShoppingBag className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 leading-tight">QuickPOS</h1>
-              <p className="text-xs text-gray-500">Sistem Kasir Modern</p>
-            </div>
+    <header className="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="bg-indigo-600 p-2 rounded-lg">
+            <Store className="w-6 h-6 text-white" />
           </div>
+          <div>
+            <h1 className="font-bold text-lg leading-tight">Posify System</h1>
+            <p className="text-xs text-slate-400">Aplikasi Kasir & Manajemen Toko</p>
+          </div>
+        </div>
 
+        {user && (
           <div className="flex items-center space-x-4">
-            {user && (
-              <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-gray-700 hidden md:inline-block">
-                  {user.name} ({user.role})
-                </span>
-
-                {user.role === 'admin' && (
-                  <button
-                    onClick={() => onNavigate && onNavigate(currentPage === 'admin' ? 'pos' : 'admin')}
-                    className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition"
-                  >
-                    {currentPage === 'admin' ? (
-                      <>
-                        <Store className="h-4 w-4" />
-                        <span>Ke POS</span>
-                      </>
-                    ) : (
-                      <>
-                        <LayoutDashboard className="h-4 w-4" />
-                        <span>Admin Dashboard</span>
-                      </>
-                    )}
-                  </button>
-                )}
-
+            {user.role === 'admin' && currentView && setCurrentView && (
+              <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
                 <button
-                  onClick={logout}
-                  className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition"
-                  title="Logout"
+                  onClick={() => setCurrentView('pos')}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'pos'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Logout</span>
+                  <Store className="w-4 h-4" />
+                  <span>Point of Sale</span>
+                </button>
+                <button
+                  onClick={() => setCurrentView('admin')}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'admin'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Dashboard Admin</span>
                 </button>
               </div>
             )}
+
+            <div className="flex items-center space-x-3 pl-4 border-l border-slate-700">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-semibold">
+                  <User className="w-4 h-4" />
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-medium leading-none text-slate-200">{user.name || user.username || 'Pengguna'}</p>
+                  <p className="text-xs text-slate-400 capitalize mt-0.5">{user.role || 'Staff'}</p>
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
+                title="Keluar"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   );
