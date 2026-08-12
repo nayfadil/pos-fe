@@ -1,44 +1,40 @@
-import React, { createContext, useContext, useState } from 'react';
-import { DUMMY_USERS } from '../constants/mockData';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export const AuthContext = createContext(null);
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('pos_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('pos_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('pos_user');
+    }
+  }, [user]);
 
   const login = (username, password) => {
-    setError('');
-    const foundUser = DUMMY_USERS.find(
-      (u) => u.username === username && u.password === password
-    );
-
-    if (foundUser) {
-      const userPayload = {
-        id: foundUser.id,
-        username: foundUser.username,
-        name: foundUser.name,
-        role: foundUser.role
-      };
-      setUser(userPayload);
-      localStorage.setItem('pos_user', JSON.stringify(userPayload));
-      return true;
-    } else {
-      setError('Username atau password salah!');
-      return false;
+    if (username === 'admin' && password === 'admin123') {
+      const userData = { id: 1, name: 'Admin Manager', username: 'admin', role: 'admin' };
+      setUser(userData);
+      return { success: true };
+    } else if (username === 'kasir' && password === 'kasir123') {
+      const userData = { id: 2, name: 'Kasir Utama', username: 'kasir', role: 'cashier' };
+      setUser(userData);
+      return { success: true };
     }
+    return { success: false, message: 'Username atau password salah' };
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('pos_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, error, setError }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, isAdmin: user?.role === 'admin' }}>
       {children}
     </AuthContext.Provider>
   );
