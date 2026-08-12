@@ -1,109 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export const useProductForm = (onSubmitSuccess) => {
-  const initialValues = {
-    name: '',
-    costPrice: '',
-    sellingPrice: '',
-    stock: '',
-    category: 'Umum'
-  };
+const initialFormState = {
+  name: '',
+  code: '',
+  category: 'Makanan',
+  price: '',
+  stock: '',
+  image: ''
+};
 
-  const [values, setValues] = useState(initialValues);
+export function useProductForm(initialValues = null, onSubmit = null) {
+  const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateField = (name, value, allValues) => {
-    let error = '';
-    const cost = Number(name === 'costPrice' ? value : allValues.costPrice);
-    const selling = Number(name === 'sellingPrice' ? value : allValues.sellingPrice);
-
-    switch (name) {
-      case 'name':
-        if (!value.trim()) error = 'Nama produk wajib diisi';
-        else if (value.trim().length < 3) error = 'Nama produk minimal 3 karakter';
-        break;
-      case 'costPrice':
-        if (value === '' || value === null) error = 'Harga beli wajib diisi';
-        else if (isNaN(value) || Number(value) <= 0) error = 'Harga beli harus lebih dari 0';
-        break;
-      case 'sellingPrice':
-        if (value === '' || value === null) error = 'Harga jual wajib diisi';
-        else if (isNaN(value) || Number(value) <= 0) error = 'Harga jual harus lebih dari 0';
-        else if (cost > 0 && Number(value) < cost) {
-          error = 'Harga jual tidak boleh lebih kecil dari harga beli';
-        }
-        break;
-      case 'stock':
-        if (value === '' || value === null) error = 'Stok wajib diisi';
-        else if (isNaN(value) || Number(value) < 0) error = 'Stok tidak boleh negatif';
-        break;
-      default:
-        break;
+  useEffect(() => {
+    if (initialValues) {
+      setFormData({
+        name: initialValues.name || '',
+        code: initialValues.code || '',
+        category: initialValues.category || 'Makanan',
+        price: initialValues.price !== undefined ? String(initialValues.price) : '',
+        stock: initialValues.stock !== undefined ? String(initialValues.stock) : '',
+        image: initialValues.image || ''
+      });
+    } else {
+      setFormData(initialFormState);
     }
-    return error;
+    setErrors({});
+  }, [initialValues]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
-  const validateAll = () => {
+  const validate = () => {
     const newErrors = {};
-    Object.keys(values).forEach((key) => {
-      const err = validateField(key, values[key], values);
-      if (err) newErrors[key] = err;
-    });
+    if (!formData.name.trim()) newErrors.name = 'Nama produk wajib diisi';
+    if (!formData.code.trim()) newErrors.code = 'Kode produk wajib diisi';
+    if (!formData.price || Number(formData.price) <= 0) newErrors.price = 'Harga harus lebih dari 0';
+    if (!formData.stock || Number(formData.stock) < 0) newErrors.stock = 'Stok tidak boleh negatif';
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    const nextValues = { ...values, [name]: value };
-    setValues(nextValues);
-
-    // Real-time validation for target field and cross-field check for prices
-    const err = validateField(name, value, nextValues);
-    let updatedErrors = { ...errors, [name]: err };
-
-    if (name === 'costPrice' || name === 'sellingPrice') {
-      const sellingErr = validateField('sellingPrice', nextValues.sellingPrice, nextValues);
-      updatedErrors.sellingPrice = sellingErr;
-    }
-
-    setErrors(updatedErrors);
-  };
-
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateAll()) {
-      setIsSubmitting(true);
-      const payload = {
-        id: `prod-${Date.now()}`,
-        name: values.name.trim(),
-        costPrice: Number(values.costPrice),
-        price: Number(values.sellingPrice),
-        sellingPrice: Number(values.sellingPrice),
-        stock: Number(values.stock),
-        category: values.category || 'Umum'
-      };
-
-      if (onSubmitSuccess) {
-        onSubmitSuccess(payload);
+    if (e) e.preventDefault();
+    if (validate()) {
+      if (onSubmit) {
+        onSubmit(formData);
       }
-      setIsSubmitting(false);
-      resetForm();
+      return true;
     }
+    return false;
   };
 
   const resetForm = () => {
-    setValues(initialValues);
+    setFormData(initialFormState);
     setErrors({});
   };
 
   return {
-    values,
+    formData,
     errors,
-    isSubmitting,
     handleChange,
     handleSubmit,
-    resetForm
+    resetForm,
+    setFormData
   };
-};
+}
