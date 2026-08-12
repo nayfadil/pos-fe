@@ -1,66 +1,58 @@
 import { useState, useEffect } from 'react';
-import { INITIAL_PRODUCTS, CATEGORIES } from '../constants/mockData';
+import { INITIAL_PRODUCTS } from '../constants/mockData';
 
 export function useProducts() {
   const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('pos_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    try {
+      const saved = localStorage.getItem('pos_products');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse products from localStorage:', e);
+    }
+    return Array.isArray(INITIAL_PRODUCTS) ? INITIAL_PRODUCTS : [];
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Semua');
 
   useEffect(() => {
-    localStorage.setItem('pos_products', JSON.stringify(products));
+    try {
+      localStorage.setItem('pos_products', JSON.stringify(products));
+    } catch (e) {
+      console.error('Failed to save products to localStorage:', e);
+    }
   }, [products]);
 
   const addProduct = (newProduct) => {
-    const item = {
+    const productToAdd = {
       ...newProduct,
-      id: `prod-${Date.now()}`,
-      price: Number(newProduct.price),
-      stock: Number(newProduct.stock)
+      id: Date.now(),
+      price: Number(newProduct.price) || 0,
+      stock: Number(newProduct.stock) || 0,
     };
-    setProducts((prev) => [item, ...prev]);
+    setProducts((prev) => [...(Array.isArray(prev) ? prev : []), productToAdd]);
   };
 
-  const updateProduct = (id, updatedData) => {
-    setProducts((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              ...updatedData,
-              price: Number(updatedData.price),
-              stock: Number(updatedData.stock)
-            }
-          : item
-      )
-    );
+  const updateProduct = (id, updatedFields) => {
+    setProducts((prev) => {
+      const safePrev = Array.isArray(prev) ? prev : [];
+      return safePrev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
+    });
   };
 
   const deleteProduct = (id) => {
-    setProducts((prev) => prev.filter((item) => item.id !== id));
+    setProducts((prev) => {
+      const safePrev = Array.isArray(prev) ? prev : [];
+      return safePrev.filter((p) => p.id !== id);
+    });
   };
 
-  const filteredProducts = products.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === 'Semua' || p.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
   return {
-    products: filteredProducts,
-    allProducts: products,
-    categories: CATEGORIES,
-    searchTerm,
-    setSearchTerm,
-    selectedCategory,
-    setSelectedCategory,
+    products: Array.isArray(products) ? products : [],
     addProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
   };
 }
