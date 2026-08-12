@@ -1,49 +1,33 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import Header from './components/Header';
 import { PosPage } from './pages/PosPage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { CartProvider } from './context/CartContext';
 
-const AppContent = () => {
-  const [currentPage, setCurrentPage] = useState('pos'); // 'pos' | 'admin' | 'login'
-  const { user } = useAuth();
+function AppContent() {
+  const auth = useAuth() || {};
+  const { user, activeTab, currentPage } = auth;
+  const currentView = activeTab || currentPage;
+
+  if (!user) {
+    return <LoginPage />;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Quick Navigation Toolbar for Demo */}
-      <div className="bg-gray-900 text-white text-xs px-4 py-1.5 flex justify-between items-center">
-        <span className="opacity-80">React POS Admin Mode Switcher</span>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setCurrentPage('pos')}
-            className={`px-2.5 py-0.5 rounded transition ${currentPage === 'pos' ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-gray-800 text-gray-300'}`}
-          >
-            Halaman POS
-          </button>
-          <button
-            onClick={() => setCurrentPage('admin')}
-            className={`px-2.5 py-0.5 rounded transition ${currentPage === 'admin' ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-gray-800 text-gray-300'}`}
-          >
-            Dashboard Admin (Tambah Produk)
-          </button>
-          <button
-            onClick={() => setCurrentPage('login')}
-            className={`px-2.5 py-0.5 rounded transition ${currentPage === 'login' ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-gray-800 text-gray-300'}`}
-          >
-            Login
-          </button>
-        </div>
-      </div>
-
-      {currentPage === 'pos' && <PosPage />}
-      {currentPage === 'admin' && (
-        <AdminDashboardPage onNavigateToPos={() => setCurrentPage('pos')} />
-      )}
-      {currentPage === 'login' && <LoginPage />}
+    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
+      <Header />
+      <main className="flex-1 flex overflow-hidden">
+        {currentView === 'admin' || currentView === 'dashboard' ? (
+          <AdminDashboardPage />
+        ) : (
+          <PosPage />
+        )}
+      </main>
     </div>
   );
-};
+}
 
 export default function App() {
   return (
